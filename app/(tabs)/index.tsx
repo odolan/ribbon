@@ -15,6 +15,8 @@ import {
 
 import { RibbonCardStack } from '../components/RibbonCardStack';
 
+// add this comment rihgt here yayy
+
 const images = [
   'https://www.singulart.com/blog/wp-content/uploads/2018/08/portrait-1140x1069.jpg', 
   'https://shotkit.com/wp-content/uploads/2021/06/Famous-portrait-CT_2860.jpeg',
