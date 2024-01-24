@@ -1,11 +1,20 @@
-import { StatusBar } from 'expo-status-bar';
-import { Platform, StyleSheet, TextInput, FlatList, Keyboard, SafeAreaView } from 'react-native';
+import { StyleSheet, TextInput, FlatList, Keyboard, SafeAreaView, TouchableOpacity, Dimensions, Pressable, View, Text} from 'react-native';
 
-import { Text, View } from '../components/Themed';
 import { useEffect, useState } from 'react';
+
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faPaperPlane, faCircleCheck, faXmark} from '@fortawesome/free-solid-svg-icons';
+
+import { router } from 'expo-router';
 
 import * as Contacts from 'expo-contacts';
 import { ScrollView, TouchableWithoutFeedback } from 'react-native-gesture-handler';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const SWIPE_THRESHOLD = 120; // distance in pixels after which a swipe is considered
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+const CARD_WIDTH = SCREEN_WIDTH * 0.9 
+const CARD_HEIGHT = SCREEN_HEIGHT * 0.6; 
 
 type CustomContact = {
   name: string | undefined;
@@ -14,6 +23,7 @@ type CustomContact = {
   id: string;
 };
 
+
 export default function ModalScreen() {
   
   const ContactSearch = () => {
@@ -21,6 +31,8 @@ export default function ModalScreen() {
     const [searchText, setSearchText] = useState('');
     const [contacts, setContacts] = useState<CustomContact[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    const [match, setMatch] = useState<CustomContact[]>([]);
 
     useEffect(() => {
       (async () => {
@@ -51,7 +63,7 @@ export default function ModalScreen() {
     const filterContacts = () => {
       if (!searchText) {
         // Return an empty array if searchText is empty
-        return [];
+        return contacts;
       }
     
       // Filter contacts based on name matching the search text
@@ -62,29 +74,95 @@ export default function ModalScreen() {
     };
 
 
+    // selects and deselects contact
+    const contactSelected = (contact: CustomContact) => {
+      if (match.some(item => item.id === contact.id)) {
+        setMatch(match.filter(item => item.id !== contact.id));
+      } else if (match.length < 2) {
+        setMatch([...match, contact]);
+      }
+    }
+
+    // search contact
     const renderContact = ({ item }: { item: CustomContact }) => {
       return (
-        <View style={{paddingVertical: 15, paddingHorizontal: 10, marginTop: 5, backgroundColor: '#F5F5F5', borderRadius: 8}}>
-          <Text>{item.name}</Text>
+        <TouchableOpacity onPress={() => contactSelected(item)} activeOpacity={1} style={{paddingVertical: 8, paddingHorizontal: 5, flexDirection: 'row', justifyContent: 'space-between'}}>
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <View style={{width: 40, height: 40, borderRadius: 20, backgroundColor: '#E5E4E2', marginRight: 10}}/>
+            <Text style={{fontSize: 20}}>{item.name}</Text>
+          </View>
+          
+          {/* show selected check */}
+          { !match.some(contact => contact.id === item.id) ? <></> :
+            <View>
+              <FontAwesomeIcon icon={ faCircleCheck } size={25} color='green'/>
+            </View>
+          }
+          
+
+        </TouchableOpacity>
+      );
+    };
+
+    // match contact 
+    const renderMatchContact = ({ item }: { item: CustomContact }) => {
+      return (
+        <View style={{padding: 5, width: match.length === 2 ? '95%' : '100%', alignItems: 'center', flexDirection: 'row', backgroundColor: '#F5F5F5'}}>
+          <View style={{backgroundColor: '#BEBFC5', width: 20, height: 20, borderRadius: 30}}/>
+          <Text style={{marginLeft: 10, fontSize: 20, flex: 1}}>{item.name}</Text>
+          
+          <TouchableOpacity onPress={() => setMatch(match.filter(contact => contact.id !== item.id))}>
+            <FontAwesomeIcon icon={faXmark} size={20} style={{alignSelf: 'flex-end'}}/>
+          </TouchableOpacity>
         </View>
       );
     };
 
+
     return (
-      <View style={{paddingTop: 10, width: '95%', alignItems: 'center' }}>
-          <Text>Search your contacts for friends to match</Text>
+      <View style={{paddingTop: 10, width: '95%', alignItems: 'center'}}>
+
+        {/* Contact search bar */}
+        <View style={{flexDirection: 'column', backgroundColor: '#F5F5F5', width: '100%', borderRadius: 10, padding: 10}}>
+
+          {/* Text input */}
           <TextInput
-          style={{padding: 15, fontSize: 18, backgroundColor: '#F5F5F5', borderRadius: 10, marginTop: 10, width: '100%'}}
+          style={{padding: 5, fontSize: 23, width: '100%'}}
           value={searchText}
           onChangeText={(text) => setSearchText(text)}
           placeholder="Search contacts"
-        />
-        {(isLoading || !filterContacts()) ? <></> : (
+          />
+
+          <View style={{flexDirection: 'row', backgroundColor: '#F5F5F5'}}>
+            {/* Match list */}
+            <FlatList 
+              data={match}
+              scrollEnabled={false}
+              renderItem={renderMatchContact}
+            />
+
+            {/* Match button */}
+            { match.length != 2 ? <></> :
+              <View style={{justifyContent: 'center', backgroundColor: '#F5F5F5' }}>
+                <Pressable onPress={() => router.back()} disabled={false} style={{backgroundColor: '#C51E3A', padding: 15, borderRadius: 10, justifyContent: 'center', alignItems: 'center', flexDirection: 'row'}}>
+                  <Text style={{color: '#F5F5F5', fontSize: 20, fontWeight: '700', marginRight: 10}}>Match</Text>
+                  <FontAwesomeIcon icon={ faPaperPlane } size={20} color='white'/>
+                </Pressable>
+              </View>
+            }
+            
+          </View>   
+        </View>
+
+        {/* Contacts filter list */}
+        {(isLoading) ? <></> : (
           <FlatList
-            style={{borderBottomLeftRadius: 10, borderBottomRightRadius: 10, padding: 5, width: '95%'}}
-            data={filterContacts().slice(0, 5)}
+            style={{borderBottomLeftRadius: 10, borderBottomRightRadius: 10, width: '100%'}}
+            data={filterContacts()}
             renderItem={renderContact}
+            showsVerticalScrollIndicator={false}
             keyExtractor={(item) => item.id}
+            onScroll={Keyboard.dismiss}
           />
         )}
       </View>
@@ -93,17 +171,9 @@ export default function ModalScreen() {
   
   return (
     <SafeAreaView>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false} style={{alignItems: 'center', height: '100%'}}>
-          <ContactSearch />
-          <View style={{flex: 1, flexDirection: 'column', justifyContent: 'flex-end'}}>
-            <Text>hello this is going on </Text>
-
-            <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-              <View style={{width: 50, height: 50, borderRadius: 30, backgroundColor: 'green', margin: 5}}/>
-              <View style={{width: 50, height: 50, borderRadius: 30, backgroundColor: 'green', margin: 5}}/>
-            </View>
-          </View>
-      </TouchableWithoutFeedback>
+      <View style={{alignItems: 'center', height: '100%'}}>
+          <ContactSearch />   
+      </View>
     </SafeAreaView>
   );
 }

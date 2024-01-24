@@ -6,39 +6,49 @@ import {
   View,
   StyleSheet,
   Pressable, 
-  useColorScheme,
   Text,
   SafeAreaView,
+  Image,
   Animated, 
   PanResponder, 
   Dimensions
 } from 'react-native';
 
-import Colors from '../../constants/Colors';
+import { RibbonCardStack } from '../components/RibbonCardStack';
+
+const images = [
+  'https://www.singulart.com/blog/wp-content/uploads/2018/08/portrait-1140x1069.jpg', 
+  'https://shotkit.com/wp-content/uploads/2021/06/Famous-portrait-CT_2860.jpeg',
+  'https://i.redd.it/slumhmsqqfxa1.jpg',
+  'https://cdn.britannica.com/72/146072-050-124A752E/Greyhound-bus.jpg',
+  'https://nmwa.org/wp-content/uploads/2020/01/1997.166-GAP.jpg',
+  'https://media.nga.gov/iiif/1b817e44-e9b5-4e6b-81ca-fe8b2c5f47ac/full/full/0/default.jpg?attachment_filename=portrait_of_a_young_woman_in_white_1963.10.118.jpg',
+  'https://media.gettyimages.com/id/1128922258/photo/portrait-of-surprised-man-with-friends-in-background-opening-the-door.jpg?s=1024x1024&w=gi&k=20&c=VtWGI9mNY4CzXYiwR2WKTqZo09kX1f1dReqkTHxhdGY=',
+  'https://s3.envato.com/files/463035482/64c2f928d342f03032585347_withmeta.jpg',
+];
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = 120; // distance in pixels after which a swipe is considered
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+const CARD_WIDTH = SCREEN_WIDTH * 0.9 
+const CARD_HEIGHT = SCREEN_HEIGHT * 0.6; 
 
 export default function TabOneScreen() {
-  const colorScheme = useColorScheme();
+  const [activeImageUri, setActiveImageUri] = useState<string|null>(null);
 
-  type CardData = {
-    name: String;
-  }
-
+    const handleImageSelect = (uri: string|null) => {
+        setActiveImageUri(uri);
+    };
 
   const MatchFriendsButton = () => {
     return (
       <View style={{flexDirection: 'column', alignItems: 'center'}}>
 
         <View style={{flexDirection: 'row', justifyContent: 'flex-end', width: '95%'}}>
-          <Link style={{backgroundColor:'orange', padding: 5, borderRadius: 10}} href="/modal" asChild>
+          <Link style={{padding: 5}} href="/modal" asChild>
             <Pressable>
               {({ pressed }) => (
-                <View style={{flexDirection: 'row'}}>
-                  <Text style={{fontSize: 20, fontWeight:'500', padding: 5, color:'white'}}>Match Friends</Text>
-                  <FontAwesomeIcon icon={ faHeartCirclePlus } size={30} color='#ef1452'/>
-                </View>
+                <FontAwesomeIcon icon={ faHeartCirclePlus } size={35} color='#FF255C'/>
               )}
             </Pressable>
           </Link>
@@ -48,147 +58,41 @@ export default function TabOneScreen() {
     );
   };
 
-  const CardStack = (props: { cards: CardData[] }) => {
-
-    let MAX_VERTICAL_MOVEMENT = 10;
-
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const position = useRef(new Animated.ValueXY()).current;
-    
-    const panResponder = PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: (event, gesture) => {
-        const limitedDY = Math.max(-MAX_VERTICAL_MOVEMENT, Math.min(MAX_VERTICAL_MOVEMENT, gesture.dy));
-        position.setValue({ x: gesture.dx, y: limitedDY });
-      },
-      onPanResponderRelease: (event, gesture) => {
-        if (gesture.dx > SWIPE_THRESHOLD) {
-          swipeCard('right');
-        } else if (gesture.dx < -SWIPE_THRESHOLD) {
-          swipeCard('left');
-        } else {
-          resetPosition();
-        }
-      },
-    });
-
-    type CardProps = {
-      card: CardData
-    };
-
-    const Card: React.FC<CardProps> = ({ card }) => {
-      return (
-          <View style={{}}>
-              <Text>{card.name}</Text>
-          </View>
-      );
-  };
-
-    const resetPosition = () => {
-      Animated.spring(position, {
-        toValue: { x: 0, y: 0 },
-        useNativeDriver: false,
-      }).start();
-    };
-
-    const swipeCard = (direction: string) => {
-      const x = direction === 'right' ? SCREEN_WIDTH : -SCREEN_WIDTH;
-      Animated.timing(position, {
-        toValue: { x, y: 0 },
-        duration: 300,
-        useNativeDriver: false,
-      }).start(() => onSwipeComplete(direction));
-    };
-
-    const onSwipeComplete = (direction: string) => {
-      if (direction === 'right') {
-        onSwipeRight();
-      } else {
-        onSwipeLeft();
-      }
-      position.setValue({ x: 0, y: 0 });
-      setCurrentIndex(currentIndex + 1); // Move to the next card
-    };
-
-    const onSwipeRight = () => {
-      console.log('Swiped right');
-      // Add your swipe right logic here
-    };
-
-    const onSwipeLeft = () => {
-      console.log('Swiped left');
-      // Add your swipe left logic here
-    };
-
-    const rotate = position.x.interpolate({
-      inputRange: [-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
-      outputRange: ['-10deg', '0deg', '10deg'],
-      extrapolate: 'clamp',
-    });
-
-    const cardStyle = {
-      transform: [
-        { rotate },
-        ...position.getTranslateTransform(),
-      ],
-      marginBottom: 50,
-    }
-
-
-    const renderCards = () => {
-      return props.cards.map((card, index) => {
-        if (index < currentIndex) {
-          return null;
-        }
-
-        if (index === currentIndex) {
-          return (
-            <Animated.View
-              key={index}
-              style={[position.getLayout(), styles.card, cardStyle, {position: 'absolute', zIndex: 99}]}
-              {...panResponder.panHandlers}
-            >
-              <Card card={{name: 'owen'}}/>
-            </Animated.View>
-          );
-        }
-
-        return (
-          <Card key={index} card={{name: 'owen'}}/>
-        );
-      }).reverse();
-    };
-
-    return <View style={{marginTop: 20}}>{renderCards()}</View>;
-  };
-
   return (
-    <SafeAreaView style={{flex: 1, flexDirection: 'column'}}>
-      <MatchFriendsButton />
-      <CardStack cards={[{name: 'owen'}, {name: 'tom'}, {name: 'peter'}, {name: 'mark'}]}/>
+    <SafeAreaView style={{ flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start' }}>
+      {/* <MatchFriendsButton /> */}
+      <View style={{flexDirection: 'row', margin: 10, width: '95%', alignItems: 'center'}}>
+        <View style={{backgroundColor: '#FE6F5E', width: 50, height: 50, borderRadius: 30}}/>
+
+        <View style={{flexDirection: 'column', padding: 5}}>
+          <Text style={{fontSize: 30, fontWeight: 600}}>Owen Dolan</Text>
+          <Text style={{fontSize: 20, fontWeight: 600}}>"o-dog"</Text>
+        </View>
+      </View>
+
+      <RibbonCardStack onImageSelect={handleImageSelect} cards={images}/>
+
+      {activeImageUri && (
+                <Image source={{ uri: activeImageUri }} style={styles.fullScreenImage} />
+            )}
+
+      <View style={{width: '98%', flexDirection: 'row', justifyContent: 'space-between'}}>
+        <View style={{flexDirection: 'row', padding: 5, margin: 5, backgroundColor: '#FE6F5E', borderRadius: 10}}>
+          <Text style={{ fontSize: 20, color: 'white' }}>🔥5</Text>
+          <Text style={{ fontSize: 20, marginLeft: 8, color: 'white' }}>👀34</Text>
+        </View>
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
+  fullScreenImage: {
+    position: 'absolute',
     width: SCREEN_WIDTH,
-    height: 100,
-    backgroundColor: 'green',
-
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+    height: SCREEN_HEIGHT,
+    top: 0,
+    left: 0,
+    zIndex: 10, // make sure it covers other components
   },
 });

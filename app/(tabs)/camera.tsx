@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-export default function TabThreeScreen() {
+export default function TabTwoScreen() {
   return (
     <View style={styles.container}>
     </View>

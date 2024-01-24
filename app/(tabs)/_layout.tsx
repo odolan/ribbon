@@ -1,8 +1,9 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
-import { Pressable, useColorScheme } from 'react-native';
+import { Text } from 'react-native';
 
-import Colors from '../../constants/Colors';
+import { faHome, faCamera, faUser } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 
 /**
  * You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
@@ -15,24 +16,36 @@ function TabBarIcon(props: {
 }
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
 
   return (
     <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-      }}>
+      screenOptions={{tabBarStyle: { borderTopWidth: 0, backgroundColor: 'transparent'}}}
+    >
       <Tabs.Screen
         name="index"
         options={{
           headerShown: false,
+          tabBarShowLabel: false,
+          tabBarIcon: ({ color }) => <FontAwesomeIcon icon={faHome} color="#1B1B1B" size={30} />,
         }}
       />
+
+      <Tabs.Screen
+        name="camera"
+        options={{
+          headerShown: false,
+          tabBarShowLabel: false,
+          tabBarIcon: ({ color }) => <FontAwesomeIcon icon={faCamera} color="#1B1B1B" size={30} />,
+        }}
+      />
+
       <Tabs.Screen
         name="two"
         options={{
-          title: 'My Clicks',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: '',
+          tabBarShowLabel: false,
+          headerShown: false,
+          tabBarIcon: ({ color }) => <FontAwesomeIcon icon={faUser} color="#1B1B1B" size={30} />,
         }}
       />
     </Tabs>
