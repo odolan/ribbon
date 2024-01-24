@@ -9,7 +9,6 @@ import {
   Text,
   SafeAreaView,
   Image,
-  Animated, 
   PanResponder, 
   Dimensions
 } from 'react-native';
